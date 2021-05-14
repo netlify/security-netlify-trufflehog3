@@ -18,13 +18,13 @@ from github import Github
 git_lfs_problem_repos = [ 'repo-name'
                         ]
 
-def new_scan():
+def new_scan(report_path):
 #    process = subprocess.Popen(['/usr/local/bin/trufflehog3',
     process = subprocess.Popen(['trufflehog3',
-                                '--output', 'trufflehog_report.json',
+                                '--output', report_path,
                                 '--format', 'json',
                                 '--no-entropy',
-                                '--max-depth=25',
+                                '--max-depth=1000',
                                 '--line-numbers',
                                 '--no-current',
                                 './'
@@ -211,7 +211,7 @@ def main():
     if slack_alert == "true":
         send_slack_alert(slack_webhook, message)
     
-    new_scan()
+    new_scan(args.report_path)
     parse_report_for_issues(repo_name, args.report_path, args.suppressions_path, args.ignore_paths, slack_webhook, slack_alert, github_issue)
 
     message = "Trufflehog3 Scan and Report Parse Complete\n"
