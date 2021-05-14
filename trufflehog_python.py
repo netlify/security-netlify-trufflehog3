@@ -13,11 +13,6 @@ from slack import WebClient
 from slack.errors import SlackApiError
 from github import Github
 
-slack_channel="security-operations-alerts"
-
-# Hard to deal with the ridiculously long strings at these paths - false positives
-ignore_paths = ['"/db/seeds/base.rb"'
-                ] 
 # github actions is having issues calling trufflehog3 on some files due to LFS problems.
 # this could be better.
 git_lfs_problem_repos = [ 'repo-name'
@@ -31,7 +26,7 @@ def new_scan():
                                 '--no-entropy',
                                 '--max-depth=25',
                                 '--line-numbers',
-                                '.'
+                                './'
                                 ], 
                            stdout=subprocess.PIPE,
                            universal_newlines=True)
@@ -56,7 +51,7 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
 #            print("Entire Issue: {}\n".format(issue))
             digest = hashlib.sha256()
             digest.update(str.encode(repo_name) + str.encode(json.dumps(issue['path'])) + str.encode(json.dumps(issue['commitHash'])))
-            issue_title = "secret discovered - " + json.dumps(issue['commit']) + " - " + json.dumps(issue['path'])
+            issue_title = "secret discovered - " + json.dumps(issue['path'] + " - " + digest.hexdigest() )
             # print("--New Finding Alert\n")
             # print("--Repo: " + repo_name)
             # print("--Date: " + json.dumps(issue['date']))
@@ -76,46 +71,52 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
             message += "--SHA256: " + digest.hexdigest() + "\n"
             message += "--Reason: " + json.dumps(issue['reason']) + "\n"
             
-            #hack - Hard to deal with some specific long strings or other paths we dont care about
-            file = open(ignore_paths, 'r')
-            file_lines = file.readlines()
-            #count = 0
-            for line in file_lines:
-                #print("Line{}: {}".format(count, line.strip().split(' ', 1)[0]))
-                for found_string in issue['stringsFound']:
-                    if json.dumps(issue['path']) == line.strip().split(' ', 1)[0]:
-                        print("--String Discovered: Redacted - too long")
-                        message += "--String Discovered: Redacted - too long\n"
-                    else:
-                        print("--String Discovered: " + json.dumps(found_string))
-                        message += "--String Discovered: " + json.dumps(found_string) + "\n"
+            #hack - Hard to deal with some specific long strings or other paths we dont care about   
+            for found_string in issue['stringsFound']:
+                if os.path.exists(ignore_paths):
+                    file = open(ignore_paths, 'r')
+                    file_lines = file.readlines()
+                    #count = 0
+                    for line in file_lines:
+                        #print("Line{}: {}".format(count, line.strip().split(' ', 1)[0]))
+                        if json.dumps(issue['path']) == line.strip().split(' ', 1)[0]:
+                            print("--String Discovered: Redacted - too long")
+                            message += "--String Discovered: Redacted - too long\n"
+                        else:
+                            print("--String Discovered: " + json.dumps(found_string))
+                            message += "--String Discovered: " + json.dumps(found_string) + "\n"
+                else:
+                    print("--String Discovered: " + json.dumps(found_string) + "\n")
+                    message += "--String Discovered: " + json.dumps(found_string) + "\n"
             print(message)
             print("\n")
 
             # Checking if commitHash or sha256 digest is in suppressions file
-            file = open(suppressions_path, 'r')
-            file_lines = file.readlines()
-            #count = 0
             suppressions_matched = "false"
-            for line in file_lines:
-                #print("Line{}: {}".format(count, line.strip().split(' ', 1)[0]))
-                if json.dumps(issue['commitHash']).strip('\"') == line.strip().split(' ', 1)[0] or digest.hexdigest() == line.strip().split(' ', 1)[0]:
-                    suppressions_matched = "true"
-            
+            if os.path.exists(suppressions_path):
+                file = open(suppressions_path, 'r')
+                file_lines = file.readlines()
+                #count = 0                
+                for line in file_lines:
+                    #print("Line{}: {}".format(count, line.strip().split(' ', 1)[0]))
+                    if json.dumps(issue['commitHash']).strip('\"') == line.strip().split(' ', 1)[0] or digest.hexdigest() == line.strip().split(' ', 1)[0]:
+                        suppressions_matched = "true"
+                
             #Suppress notifications of these paths explicitly
-            file = open(ignore_paths, 'r')
-            file_lines = file.readlines()
-            #count = 0
             path_matched = "false"
-            for line in file_lines:
-                #print("Line{}: {}".format(count, line.strip().split(' ', 1)[0]))
-                if json.dumps(issue['path']) == line.strip().split(' ', 1)[0]:
-                    path_matched = "true"
+            if os.path.exists(ignore_paths):
+                file = open(ignore_paths, 'r')
+                file_lines = file.readlines()
+                #count = 0
+                for line in file_lines:
+                    #print("Line{}: {}".format(count, line.strip().split(' ', 1)[0]))
+                    if json.dumps(issue['path']) == line.strip().split(' ', 1)[0]:
+                        path_matched = "true"
 
             #If not suppressed, send to slack and/or github
             if suppressions_matched == "false" and path_matched == "false":
-                print("Message: " + message)
-                print("\n")
+                #print("Message: " + message)
+                #print("\n")
                 if slack_alert == "true":
                     send_slack_alert(slack_webhook, message)
                 if github_issue == "true":
