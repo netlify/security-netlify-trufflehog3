@@ -86,8 +86,7 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
             suppressions_matched = "false"
             if os.path.exists(suppressions_path):
                 file = open(suppressions_path, 'r')
-                file_lines = file.readlines()
-                #count = 0                
+                file_lines = file.readlines()              
                 for line in file_lines:
                     #print("Line{}: {}".format(count, line.strip().split(' ', 1)[0]))
                     if json.dumps(issue['commitHash']).strip('\"') == line.strip().split(' ', 1)[0] or digest.hexdigest() == line.strip().split(' ', 1)[0]:
@@ -98,10 +97,10 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
             if os.path.exists(ignore_paths):
                 file = open(ignore_paths, 'r')
                 file_lines = file.readlines()
-                #count = 0
                 for line in file_lines:
-                    #print("Line{}: {}".format(count, line.strip().split(' ', 1)[0]))
-                    if json.dumps(issue['path']) == line.strip().split(' ', 1)[0]:
+                    #print("Line from file: {}".format(line.strip().split(' ', 1)[0]))
+                    #print("Line from report: ", json.dumps(issue['path']).strip('"'))
+                    if json.dumps(issue['path']).strip('"') == line.strip().split(' ', 1)[0]:
                         path_matched = "true"
 
             #If not suppressed, send to slack and/or github
