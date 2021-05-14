@@ -58,7 +58,7 @@ First you must call the trufflehog action or get trufflehog directly and use it 
 
 ```
       - name: trufflehog Parse Report
-        uses: netlify/security-netlify-trufflehog@v0.1
+        uses: netlify/security-netlify-trufflehog3@v0.1
         with:
           trufflehog_report_file_path: 'trufflehog_report.json'
           suppression_file_path: 'suppressions'
