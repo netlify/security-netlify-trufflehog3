@@ -8,7 +8,7 @@ RUN apt-get update && \
 COPY requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 
-COPY trufflehog_pythong.py /trufflehog_python.py
+COPY trufflehog_python.py /trufflehog_python.py
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
