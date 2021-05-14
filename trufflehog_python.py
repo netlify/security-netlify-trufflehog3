@@ -52,15 +52,6 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
             digest = hashlib.sha256()
             digest.update(str.encode(repo_name) + str.encode(json.dumps(issue['path'])) + str.encode(json.dumps(issue['commitHash'])))
             issue_title = "secret discovered - " + json.dumps(issue['path'] + " - " + digest.hexdigest() )
-            # print("--New Finding Alert\n")
-            # print("--Repo: " + repo_name)
-            # print("--Date: " + json.dumps(issue['date']))
-            # print("--Path: " + json.dumps(issue['path']))
-            # print("--Branch: " + json.dumps(issue['branch']))
-            # print("--Commit Hash: " + json.dumps(issue['commitHash']))
-            # print("--Commit: " + json.dumps(issue['commit']))          
-            # print("--SHA256: " + digest.hexdigest())
-            # print("--Reason: " + json.dumps(issue['reason']))
             message = "New Finding Alert\n"
             message += "--Repo: " + repo_name + "\n"
             message += "--Date: " + json.dumps(issue['date']) + "\n"
