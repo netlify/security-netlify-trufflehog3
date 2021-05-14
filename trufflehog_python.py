@@ -58,7 +58,7 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
             message += "--Commit Hash: " + json.dumps(issue['commitHash']) + "\n"
             message += "--Commit: " + json.dumps(issue['commit']) + "\n"
             message += "--Reason: " + json.dumps(issue['reason']) + "\n"
-            #hack - Hard to deal with some specific long strings or other paths we dont care about   
+            #hack - Some long strings, like javascript, just clog up the console and alerting   
             for found_string in issue['stringsFound']:
                 if os.path.exists(ignore_paths):
                     file = open(ignore_paths, 'r')
