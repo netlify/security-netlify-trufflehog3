@@ -1,0 +1,8 @@
+requests==2.22.0
+requests-unixsocket==0.2.0
+slackclient==2.8.1
+simplejson==3.16.0
+truffleHog3==2.0.2
+truffleHogRegexes==0.0.7
+PyGithub==1.53
+GitPython

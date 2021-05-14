@@ -1,0 +1,53 @@
+name: 'security-netlify-trufflehog-parse'
+description: 'python wrapped trufflehog scanner and report parser adding features like suppression handling'
+inputs:
+  trufflehog_report_file_path:
+    description: 'location of trufflehog report that will be parsed'
+    required: true
+    default: 'trufflehog_report.json'
+  suppression_file_path:  # id of input
+    description: 'path/name of suppression list file'
+    required: false
+    default: 'suppressions_trufflehog'
+  ignore_paths_file_path:  # id of input
+    description: 'path/name of paths-to-ignore list file'
+    required: false
+    default: 'ignore-paths-trufflehog'
+  create_github_issue:
+    description: 'boolean if user wishes to create github issues'
+    required: false
+    default: 'false'
+  create_slack_notification:
+    description: 'boolean if user wishes to create slack alert'
+    required: false
+    default: false
+  secret_scan_slack_webhook:
+    description: 'slack webhook, if desired'
+    required: false
+    default: ''
+  secret_scan_gh_access_token:
+    description: 'GH access token used to create issues'
+    required: false
+    default: ''
+  github_repo_name:
+    description: 'github repo name'
+    required: false
+    default: ''
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.trufflehog_report_file_path }}
+    - ${{ inputs.suppression_file_path }}
+    - ${{ inputs.ignore_paths_file_path }}
+    - ${{ inputs.create_github_issue }}
+    - ${{ inputs.github_min_severity }}
+    - ${{ inputs.create_slack_notification }}
+    - ${{ inputs.slack_min_severity }}
+  env:
+    SECRET_SCAN_SLACK_WEBHOOK: ${{ inputs.secret_scan_slack_webhook }}
+    SECRET_SCAN_GH_ACCESS_TOKEN: ${{ inputs.secret_scan_gh_access_token }}
+    GITHUB_REPO: ${{ inputs.github_repo_name }}
+branding:
+  icon: 'life-buoy'
+  color: 'white'
