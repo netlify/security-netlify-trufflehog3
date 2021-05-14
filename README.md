@@ -10,35 +10,71 @@
                    ||`;      / / | |
       jrei        //_;`    ,_;' ,_;"
 ```
-# security-netlify-trufflehog-scanner
-This repository is meant to hold trufflehog secret-scanning utility
+# security-netlify-trufflehog3
+This repository is meant to hold trufflehog3 secret-scanning utility
 
-## Secret Scanning Automation
-Trufflehog (using `trufflehog3`) scans the Netlify code repos in github everyday by executing the script `trufflehog_python.py` as a github action. It will report any new findings to slack channel `#security-operations-alerts`.
+# Security Netlify Trufflehog Parse
+[trufflehog is a container scanning tool from <needed>. This action is written in python and executes trufflehog, then parses the trufflehog report to provide extra functionality, such as: suppression handling, alerting to slack, opening github issues with labels specifying risk level, by specifying which severity levels of notifications.
 
-trufflehog_arachni.py  accepts to arguments 
---org , -o , the org to report on
+## Inputs
 
-### Suppressing Alerts
-To suppress alerts, add the `Commit Hash` or `SHA256` to the `suppressions` file, line-by-line, with an appropriate comment. PR and merge.
+#### `trufflehog_report_file_path`
 
-### Testing Locally
-- You will need to install `trufflehog3` using `pip`, and have it available in '/usr/local/bin/trufflehog3`
-- You will need to set the TRUFFLEHOG_SLACK_WEBHOOK env var.
-- You will need to set the TRUFFLEHOG_GH_ACCESS_TOKEN env var.
+**Required** - location of trufflehog report that will be parsed
 
-### TODO
-- Post daily HTML report as static Netlify site.
-- each string can be suppressed, currently the entire commit must be suppressed.
-- figure out `git LFS` problem on some of the repos
+#### `suppression_file_path` 
 
-## Using `trufflehog-python.py` to Perform a Secret Scan
-Prerequisites - `trufflehog3` must be installed and available on your system.
+path/name of suppression list file
+Sometimes a particular vulnerability does not need to be addressed. This can be due to the environment or other priority directives. To suppress the vulnerability from the alerted findings, add the contents of the `Layer SHA256` value to a `suppressions-trufflehog` file, and indicate the path as an comment. 
 
-### Running the scan
-Now we can run a scan. If you wish to see which parameters are being executed with `trufflehog3`, explore the script. 
+#### `ignore_paths_file_path` 
 
-`python trufflehog-python.py --org netlify > /tmp/netlify_secrets.trufflelog`
+path/name of ignore_paths list file
+Sometimes a particular path does not need to be addressed. This can be due to the environment or other priority directives. To suppress the path from the alerted findings, add the full path to the `ignore-paths-trufflehog` file, and leave a comment if neccessary. 
 
-### Create HTML report
-TBD
+#### `create_github_issue`
+
+boolean if user wishes to create github issues
+
+#### `create_slack_notification` 
+
+boolean if user wishes to create slack alert
+
+#### `secret_scan_slack_webhook` 
+
+secret_scan_slack_webhook: ${{ secrets.SECRET_SCAN_SLACK_WEBHOOK }}
+
+#### `secret_scan_gh_access_token`         
+
+secret_scan_gh_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+####  `github_repo_name`
+
+github_repo_name: ${{ github.repository}}
+
+
+## Example Usage 
+First you must call the trufflehog action or get trufflehog directly and use it to produce a json report:
+
+```
+      - name: trufflehog Parse Report
+        uses: netlify/security-netlify-trufflehog@v0.1
+        with:
+          trufflehog_report_file_path: 'trufflehog_report.json'
+          suppression_file_path: 'suppressions'
+          create_github_issue: 'true'
+          create_slack_notification: 'false'
+          secret_scan_slack_webhook: ${{ secrets.SECRET_SCAN_SLACK_WEBHOOK }}
+          secret_scan_gh_access_token: ${{ secrets.GITHUB_TOKEN }}
+          github_repo_name: ${{ github.repository}}
+```
+
+## Manually running the python script on your trufflehog report
+
+### Alerting to Slack
+This tool can alert to slack. By specifying `-s/--slack=true` as an argument in `.github/workflows/trufflehog-main.yml` python trufflehog execution, it will send an alert to slack for each finding. The default is `false`.
+
+You must also have envvar `SECRET_SCAN_SLACK_WEBHOOK`
+
+### Creating Github Issues
+This tool can create issues in github. By specifying `-g/--github=true` as an argument in `.github/workflows/trufflehog-main.yml` python trufflehog execution, it will create a github issue for each finding. The default is `false`.
