@@ -41,9 +41,7 @@ runs:
     - ${{ inputs.suppression_file_path }}
     - ${{ inputs.ignore_paths_file_path }}
     - ${{ inputs.create_github_issue }}
-    - ${{ inputs.github_min_severity }}
     - ${{ inputs.create_slack_notification }}
-    - ${{ inputs.slack_min_severity }}
   env:
     SECRET_SCAN_SLACK_WEBHOOK: ${{ inputs.secret_scan_slack_webhook }}
     SECRET_SCAN_GH_ACCESS_TOKEN: ${{ inputs.secret_scan_gh_access_token }}

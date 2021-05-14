@@ -24,24 +24,20 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Trivy Container Scan
-        run: /home/runner/trivy image -f json -o trivy_report.json trivy-ci-test:latest
-
-#      - name: Trivy Print Report for Testing
-#        run: echo $GITHUB_REPO && cat trivy_report.json
+#      - name: Trofflehog Print Report for Testing
+#        run: echo $GITHUB_REPO && cat trufflehog_report.json
 #        env: 
 #          GITHUB_REPO: ${{ github.repository}}
 
       - name: Trivy Parse Report
-        uses: netlify/security-netlify-trivy@v0.3
+        uses: netlify/security-netlify-trufflehog3@v0.1
         with:
-          trivy_report_file_path: 'trivy_report.json'
-          suppression_file_path: 'suppressions'
+          trufflehog_report_file_path: 'trufflehog_report.json'
+          suppression_file_path: 'suppressions-trufflehog'
+          ignore_paths_file_path: 'ignore-paths-trufflehog'
           create_github_issue: 'true'
-          github_min_severity: 'high'
           create_slack_notification: 'false'
-          slack_min_severity: 'critical'
-          container_scan_slack_webhook: ${{ secrets.CONTAINER_SCAN_SLACK_WEBHOOK }}
+          container_scan_slack_webhook: ${{ secrets.SECRET_SCAN_SLACK_WEBHOOK }}
           container_scan_gh_access_token: ${{ secrets.GITHUB_TOKEN }}
           github_repo_name: ${{ github.repository}}
 
