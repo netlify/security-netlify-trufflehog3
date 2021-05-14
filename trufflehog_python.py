@@ -26,6 +26,7 @@ def new_scan():
                                 '--no-entropy',
                                 '--max-depth=25',
                                 '--line-numbers',
+                                '--no-current',
                                 './'
                                 ], 
                            stdout=subprocess.PIPE,
@@ -48,10 +49,7 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
     with open(filename, 'r+') as json_file:
         json_data = json.load(json_file)
         for issue in json_data:
-#            print("Entire Issue: {}\n".format(issue))
-            digest = hashlib.sha256()
-            digest.update(str.encode(repo_name) + str.encode(json.dumps(issue['path'])) + str.encode(json.dumps(issue['commitHash'])))
-            issue_title = "secret discovered - " + json.dumps(issue['path'] + " - " + digest.hexdigest() )
+            #print("Entire Issue: {}\n".format(issue))         
             message = "New Finding Alert\n"
             message += "--Repo: " + repo_name + "\n"
             message += "--Date: " + json.dumps(issue['date']) + "\n"
@@ -59,9 +57,7 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
             message += "--Branch: " + json.dumps(issue['branch']) + "\n"
             message += "--Commit Hash: " + json.dumps(issue['commitHash']) + "\n"
             message += "--Commit: " + json.dumps(issue['commit']) + "\n"
-            message += "--SHA256: " + digest.hexdigest() + "\n"
             message += "--Reason: " + json.dumps(issue['reason']) + "\n"
-            
             #hack - Hard to deal with some specific long strings or other paths we dont care about   
             for found_string in issue['stringsFound']:
                 if os.path.exists(ignore_paths):
@@ -79,6 +75,10 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
                 else:
                     print("--String Discovered: " + json.dumps(found_string) + "\n")
                     message += "--String Discovered: " + json.dumps(found_string) + "\n"
+            digest = hashlib.sha256()
+            digest.update(str.encode(repo_name) + str.encode(json.dumps(issue['path'])) + str.encode(json.dumps(found_string)))
+            issue_title = "secret discovered - " + json.dumps(issue['path'] + " - " + digest.hexdigest() )
+            message += "--SHA256: " + digest.hexdigest() + "\n"
             print(message)
             print("\n")
 
