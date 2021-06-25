@@ -25,7 +25,7 @@ This repository is meant to hold trufflehog3 secret-scanning utility
 #### `suppression_file_path` 
 
 path/name of suppression list file
-Sometimes a particular vulnerability does not need to be addressed. This can be due to the environment or other priority directives. To suppress the vulnerability from the alerted findings, add the contents of the `Layer SHA256` value to a `suppressions-trufflehog` file, and indicate the path as an comment. 
+Sometimes a particular vulnerability does not need to be addressed. This can be due to the environment or other priority directives. To suppress the vulnerability from the alerted findings, add the contents of the `Layer SHA256` value to a `suppressions-trufflehog` file, and indicate the path as an comment. You can also add the commit hash to suppress an entire commit. 
 
 #### `ignore_paths_file_path` 
 
@@ -48,25 +48,31 @@ secret_scan_slack_webhook: ${{ secrets.SECRET_SCAN_SLACK_WEBHOOK }}
 
 secret_scan_gh_access_token: ${{ secrets.GITHUB_TOKEN }}
 
-####  `github_repo_name`
+#### `github_repo_name`
 
-github_repo_name: ${{ github.repository}}
+github_repo_name: ${{ github.repository }}
+
+#### `github_server`
+
+github_server: ${{ github.server_url }} 
 
 
 ## Example Usage 
 First you must call the trufflehog action or get trufflehog directly and use it to produce a json report:
 
 ```
-      - name: trufflehog Parse Report
-        uses: netlify/security-netlify-trufflehog3@v0.1
+      - name: Trufflehog3 Secret Scan and Report Parser
+        uses: netlify/security-netlify-trufflehog3@v0.4.2.6
         with:
           trufflehog_report_file_path: 'trufflehog_report.json'
-          suppression_file_path: 'suppressions'
+          suppression_file_path: '.github/workflows/trufflehog3-files/suppressions-trufflehog3'
+          ignore_paths_file_path: '.github/workflows/trufflehog3-files/ignore-paths-trufflehog3'
           create_github_issue: 'true'
           create_slack_notification: 'false'
           secret_scan_slack_webhook: ${{ secrets.SECRET_SCAN_SLACK_WEBHOOK }}
           secret_scan_gh_access_token: ${{ secrets.GITHUB_TOKEN }}
           github_repo_name: ${{ github.repository}}
+          github_server: ${{ github.server_url }}
 ```
 
 ## Manually running the python script on your trufflehog report

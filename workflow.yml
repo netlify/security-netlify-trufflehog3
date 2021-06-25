@@ -6,7 +6,7 @@ name: Vulnerability Scan
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: [ main ]
+    branches: [ main, security/* ]
   pull_request:
     branches: [ main ]
 
@@ -24,20 +24,15 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-#      - name: Trofflehog Print Report for Testing
-#        run: echo $GITHUB_REPO && cat trufflehog_report.json
-#        env: 
-#          GITHUB_REPO: ${{ github.repository}}
-
-      - name: Trivy Parse Report
-        uses: netlify/security-netlify-trufflehog3@v0.1
+      - name: Trufflehog3 Secret Scan and Report Parser
+        uses: netlify/security-netlify-trufflehog3@v0.4.2.6
         with:
           trufflehog_report_file_path: 'trufflehog_report.json'
-          suppression_file_path: 'suppressions-trufflehog'
-          ignore_paths_file_path: 'ignore-paths-trufflehog'
+          suppression_file_path: '.github/workflows/trufflehog3-files/suppressions-trufflehog3'
+          ignore_paths_file_path: '.github/workflows/trufflehog3-files/ignore-paths-trufflehog3'
           create_github_issue: 'true'
           create_slack_notification: 'false'
           secret_scan_slack_webhook: ${{ secrets.SECRET_SCAN_SLACK_WEBHOOK }}
           secret_scan_gh_access_token: ${{ secrets.GITHUB_TOKEN }}
           github_repo_name: ${{ github.repository}}
-
+          github_server: ${{ github.server_url }}
