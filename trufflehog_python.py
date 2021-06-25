@@ -51,6 +51,7 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
         for issue in json_data:
             #print("Entire Issue: {}\n".format(issue))         
             message = "New Finding Alert\n"
+            message += "\n To Forever Suppress This Finding From Alerting add the SHA256 to suppressions-trufflehog3 file, to suppress all findings for this commit, add the commit hash instead. See https://github.com/netlify/security-netlify-trufflehog3#suppression_file_path \n"
             message += "--Repo: " + repo_name + "\n"
             message += "--Date: " + json.dumps(issue['date']) + "\n"
             message += "--Path: " + json.dumps(issue['path']) + "\n"
@@ -79,39 +80,38 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
                 digest.update(str.encode(repo_name) + str.encode(json.dumps(issue['path'])) + str.encode(json.dumps(found_string)))
                 issue_title = "secret discovered - " + json.dumps(issue['path'] + " - " + digest.hexdigest() )
                 message += "--SHA256: " + digest.hexdigest() + "\n"
-            message += "\n To Forever Suppress This Finding From Alerting add all SHA256 to suppressions-trufflehog3, see https://github.com/netlify/security-netlify-trufflehog3#suppression_file_path \n"
-            print(message)
-            print("\n")
+                print(message)
+                print("\n")
 
-            # Checking if commitHash or sha256 digest is in suppressions file
-            suppressions_matched = "false"
-            if os.path.exists(suppressions_path):
-                file = open(suppressions_path, 'r')
-                file_lines = file.readlines()              
-                for line in file_lines:
-                    #print("Line{}: {}".format(count, line.strip().split(' ', 1)[0]))
-                    if json.dumps(issue['commitHash']).strip('\"') == line.strip().split(' ', 1)[0] or digest.hexdigest() == line.strip().split(' ', 1)[0]:
-                        suppressions_matched = "true"
+                # Checking if commitHash or sha256 digest is in suppressions file
+                suppressions_matched = "false"
+                if os.path.exists(suppressions_path):
+                    file = open(suppressions_path, 'r')
+                    file_lines = file.readlines()              
+                    for line in file_lines:
+                        #print("Line{}: {}".format(count, line.strip().split(' ', 1)[0]))
+                        if json.dumps(issue['commitHash']).strip('\"') == line.strip().split(' ', 1)[0] or digest.hexdigest() == line.strip().split(' ', 1)[0]:
+                            suppressions_matched = "true"
                 
-            #Suppress notifications of these paths explicitly
-            path_matched = "false"
-            if os.path.exists(ignore_paths):
-                file = open(ignore_paths, 'r')
-                file_lines = file.readlines()
-                for line in file_lines:
-                    #print("Line from file: {}".format(line.strip().split(' ', 1)[0]))
-                    #print("Line from report: ", json.dumps(issue['path']).strip('"'))
-                    if json.dumps(issue['path']).strip('"') == line.strip().split(' ', 1)[0]:
-                        path_matched = "true"
+                #Suppress notifications of these paths explicitly
+                path_matched = "false"
+                if os.path.exists(ignore_paths):
+                    file = open(ignore_paths, 'r')
+                    file_lines = file.readlines()
+                    for line in file_lines:
+                        #print("Line from file: {}".format(line.strip().split(' ', 1)[0]))
+                        #print("Line from report: ", json.dumps(issue['path']).strip('"'))
+                        if json.dumps(issue['path']).strip('"') == line.strip().split(' ', 1)[0]:
+                            path_matched = "true"
 
-            #If not suppressed, send to slack and/or github
-            if suppressions_matched == "false" and path_matched == "false":
-                #print("Message: " + message)
-                #print("\n")
-                if slack_alert == "true":
-                    send_slack_alert(slack_webhook, message)
-                if github_issue == "true":
-                    dedup_and_create_gh_issue(message, issue_title)
+                #If not suppressed, send to slack and/or github
+                if suppressions_matched == "false" and path_matched == "false":
+                    #print("Message: " + message)
+                    #print("\n")
+                    if slack_alert == "true":
+                        send_slack_alert(slack_webhook, message)
+                    if github_issue == "true":
+                        dedup_and_create_gh_issue(message, issue_title)
                     
     #except:
         #print(" [ERROR] Cannot open file: " + filename)
