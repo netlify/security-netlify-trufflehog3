@@ -77,7 +77,7 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
                     message += "--String Discovered: " + json.dumps(found_string) + "\n"
             digest = hashlib.sha256()
             digest.update(str.encode(repo_name) + str.encode(json.dumps(issue['path'])) + str.encode(json.dumps(found_string))
-            issue_title = "secret discovered - " + json.dumps(issue['path'] + " - " + digest.hexdigest() )
+            issue_title = "secret discovered - " + json.dumps(issue['path'] + " - " + digest.hexdigest()
             message += "--SHA256: " + digest.hexdigest() + "\n"
             message += "\n To Forever Suppress This Finding From Alerting see https://github.com/netlify/security-netlify-trufflehog3#suppression_file_path \n"
             print(message)
