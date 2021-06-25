@@ -142,13 +142,14 @@ def get_repo_from_env() -> str:
     return repo_path
 
 def get_server_from_env() -> str:
-    repo_path = os.environ.get('GITHUB_SERVER', None)
-    if repo_path is None:
+    github_server = os.environ.get('GITHUB_SERVER', None)
+    print("GITHUB SERVER : " + github_server)
+    if github_server is None:
         raise ValueError(
                'Must provide server.',
                'eg. https://github.com' 
         )
-    return repo_path
+    return github_server
 
 def matches_issue_in_repo(repo_path, g, issue_title):
     issues = get_issues_from_repo(repo_path, g)
@@ -199,8 +200,8 @@ def main():
     slack_alert = "false"
     github_issue = "false"
     repo_name = get_repo_from_env()
-    repo_server = get_server_from_env()
-    repo_url = repo_server + "/" + repo_name
+    github_server = get_server_from_env()
+    repo_url = github_server + "/" + repo_name
     print("REPO_URL: ", repo_url) 
 
     parser = argparse.ArgumentParser(description="Trufflehog Secret Scanner")
