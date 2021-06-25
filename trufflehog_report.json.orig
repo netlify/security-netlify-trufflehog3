@@ -1,0 +1,48 @@
+[
+  {
+    "date": "2021-05-13 19:30:49",
+    "path": "somefilewithotherpasswords.txt",
+    "branch": "origin/renovate/configure",
+    "commit": "working, removed current check since this only needs to look at commit history\n",
+    "commitHash": "3829ddf4380e1ed5620c47949118e9b74aed3b2d",
+    "reason": "Password in URL",
+    "stringsFound": [
+      "11 +--String Discovered: \"4 -git config --global url.\\\"https://${GITHUB_USERNAME}:${GITHUB_PASSWORD}@github.com/\\\".insteadOf git@github.com:\"",
+      "38 +--String Discovered: \"4 -git config --global url.\\\"https://${GITHUB_USERNAME}:${GITHUB_PASSWORD}@github.com/\\\".insteadOf git@github.com:\""
+    ]
+  },
+  {
+    "date": "2021-05-13 19:30:49",
+    "path": "somefilewithotherpasswords.txt",
+    "branch": "origin/renovate/configure",
+    "commit": "working, removed current check since this only needs to look at commit history\n",
+    "commitHash": "3829ddf4380e1ed5620c47949118e9b74aed3b2d",
+    "reason": "RSA private key",
+    "stringsFound": [
+      "27 +--String Discovered: \"2 +-----BEGIN RSA PRIVATE KEY-----\""
+    ]
+  },
+  {
+    "date": "2021-05-13 19:18:25",
+    "path": "somefilewithotherpasswords.txt",
+    "branch": "origin/renovate/configure",
+    "commit": "creating dirty commit\n",
+    "commitHash": "ca2f996954c44400666c590fdf49cc58f7f341f2",
+    "reason": "Password in URL",
+    "stringsFound": [
+      "38 ---String Discovered: \"4 -git config --global url.\\\"https://${GITHUB_USERNAME}:${GITHUB_PASSWORD}@github.com/\\\".insteadOf git@github.com:\"",
+      "11 ---String Discovered: \"4 -git config --global url.\\\"https://${GITHUB_USERNAME}:${GITHUB_PASSWORD}@github.com/\\\".insteadOf git@github.com:\""
+    ]
+  },
+  {
+    "date": "2021-05-13 19:18:25",
+    "path": "somefilewithotherpasswords.txt",
+    "branch": "origin/renovate/configure",
+    "commit": "creating dirty commit\n",
+    "commitHash": "ca2f996954c44400666c590fdf49cc58f7f341f2",
+    "reason": "RSA private key",
+    "stringsFound": [
+      "27 ---String Discovered: \"2 +-----BEGIN RSA PRIVATE KEY-----\""
+    ]
+  }
+]

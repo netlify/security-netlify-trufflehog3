@@ -33,6 +33,10 @@ inputs:
     description: 'github repo name'
     required: false
     default: ''
+  github_server:
+    description: 'github server'
+    required: false
+    default: ''
 runs:
   using: 'docker'
   image: 'Dockerfile'
@@ -46,6 +50,7 @@ runs:
     SECRET_SCAN_SLACK_WEBHOOK: ${{ inputs.secret_scan_slack_webhook }}
     SECRET_SCAN_GH_ACCESS_TOKEN: ${{ inputs.secret_scan_gh_access_token }}
     GITHUB_REPO: ${{ inputs.github_repo_name }}
+    GITHUB_SERVER: ${{ inputs.github_server }}
 branding:
   icon: 'life-buoy'
   color: 'white'
