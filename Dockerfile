@@ -10,8 +10,8 @@ RUN pip3 install -r requirements.txt
 
 COPY trufflehog_python.py /trufflehog_python.py
 
-RUN git config --global credential.helper 'store --file /tmp/git-credentials' && \
-    echo "https://$GITHUB_TOKEN:x-oauth-basic@github.com" > /tmp/git-credentials
+#RUN git config --global credential.helper 'store --file /tmp/git-credentials' && \
+#    echo "https://$GITHUB_TOKEN:x-oauth-basic@github.com" > /tmp/git-credentials
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

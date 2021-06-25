@@ -27,7 +27,7 @@ def new_scan(repo_url, report_path):
                                 '--max-depth=1000',
                                 '--line-numbers',
                                 '--no-current',
-                                repo_url
+                                '.'
                                 ], 
                            stdout=subprocess.PIPE,
                            universal_newlines=True)
