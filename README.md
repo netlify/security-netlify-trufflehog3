@@ -20,7 +20,7 @@ This repository is meant to hold trufflehog3 secret-scanning utility
 
 #### `trufflehog_report_file_path`
 
-**Required** - location of trufflehog report that will be parsed
+location of trufflehog report that will be parsed
 
 #### `suppression_file_path` 
 
@@ -30,7 +30,9 @@ Sometimes a particular vulnerability does not need to be addressed. This can be 
 #### `ignore_paths_file_path` 
 
 path/name of ignore_paths list file
-Sometimes a particular path does not need to be addressed. This can be due to the environment or other priority directives. To suppress the path from the alerted findings, add the full path to the `ignore-paths-trufflehog` file, and leave a comment if neccessary. 
+Please try to suppress by the commit or SHA256 using the `suppressions-trufflehog3` file first. 
+
+But sometimes a particular path does not need to be addressed. This can be due to the environment or other priority directives. To suppress the path from the alerted findings, add the full path to the `ignore-paths-trufflehog` file, and leave a comment if neccessary. 
 
 You can also use paths with a wildcard `*`, such as `some_directory/some_nested_directory/*. This works by stripping the wildcard and comparing to the startswith() of the filepath. 
 
@@ -77,10 +79,6 @@ First you must call the trufflehog action or get trufflehog directly and use it 
           github_server: ${{ github.server_url }}
 ```
 
-
-
-
-
 ## Manually testing locally on your repo
 
 - The easiest way to test the secret scan is to install trufflehog3 using pip.
@@ -89,7 +87,7 @@ First you must call the trufflehog action or get trufflehog directly and use it 
 - Then you can run the python code that uses trufflehog3 to create and parse the report:
 
 ```
-#python3 trufflehog_python.py -p suppressions-trufflehog3
+#python3 trufflehog_python.py -p suppressions-trufflehog3 -i ignore-paths-trufflehog3
 ```
 
 By optionally setting the appropriate env vars you can also test creating github issues or slack alerting
