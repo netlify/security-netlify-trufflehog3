@@ -14,7 +14,7 @@
 This repository is meant to hold trufflehog3 secret-scanning utility
 
 # Security Netlify Trufflehog Parse
-[trufflehog is a container scanning tool from https://github.com/feeltheajf/trufflehog3. This action is written in python and executes trufflehog, then parses the trufflehog report to provide extra functionality, such as: suppression handling, alerting to slack, opening github issues with labels specifying risk level, by specifying which severity levels of notifications.
+Trufflehog3 is a container scanning tool from https://github.com/feeltheajf/trufflehog3. This action is written in python and executes trufflehog, then parses the trufflehog report to provide extra functionality, such as: suppression handling, alerting to slack, opening github issues with labels specifying risk level, by specifying which severity levels of notifications.
 
 ## Inputs
 
@@ -100,4 +100,4 @@ You must also have envvar `SECRET_SCAN_SLACK_WEBHOOK`
 ### Creating Github Issues
 This tool can create issues in github. By specifying `-g/--github=true` as an argument in python trufflehog execution, it will create a github issue for each finding. The default is `false`.
 
-ou must also have envvar `SECRET_SCAN_GH_ACCESS_TOKEN`
+You must also have envvar `SECRET_SCAN_GH_ACCESS_TOKEN`
