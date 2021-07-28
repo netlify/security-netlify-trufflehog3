@@ -31,7 +31,9 @@ Sometimes a particular vulnerability does not need to be addressed. This can be 
 
 path/name of ignore_paths list file
 Sometimes a particular path does not need to be addressed. This can be due to the environment or other priority directives. To suppress the path from the alerted findings, add the full path to the `ignore-paths-trufflehog` file, and leave a comment if neccessary. 
+
 You can also use paths with a wildcard `*`, such as `some_directory/some_nested_directory/*. This works by stripping the wildcard and comparing to the startswith() of the filepath. 
+
 #### `create_github_issue`
 
 boolean if user wishes to create github issues
@@ -62,7 +64,7 @@ First you must call the trufflehog action or get trufflehog directly and use it 
 
 ```
       - name: Trufflehog3 Secret Scan and Report Parser
-        uses: netlify/security-netlify-trufflehog3@v0.4.2.6
+        uses: netlify/security-netlify-trufflehog3@v0.5.1
         with:
           trufflehog_report_file_path: 'trufflehog_report.json'
           suppression_file_path: '.github/workflows/trufflehog3-files/suppressions-trufflehog3'
@@ -81,10 +83,10 @@ First you must call the trufflehog action or get trufflehog directly and use it 
 
 ## Manually testing locally on your repo
 
-The easiest way to test the secret scan is to install trufflehog3 using pip.
-Also clone or fetch the script from https://github.com/netlify/security-netlify-trufflehog3
-Unfortunately, even though you are running locally, you have to set the `GITHUB_REPO` env var to be your repo name, but it will run with any value. 
-Then you can run the python code that uses trufflehog3 to create and parse the report:
+- The easiest way to test the secret scan is to install trufflehog3 using pip.
+- Also clone or fetch the script from https://github.com/netlify/security-netlify-trufflehog3
+- Unfortunately, even though you are running locally, you have to set the `GITHUB_REPO` env var to be your repo name, but it will run with any value. 
+- Then you can run the python code that uses trufflehog3 to create and parse the report:
 
 ```
 #python3 trufflehog_python.py -p suppressions-trufflehog3
