@@ -31,7 +31,7 @@ Sometimes a particular vulnerability does not need to be addressed. This can be 
 
 path/name of ignore_paths list file
 Sometimes a particular path does not need to be addressed. This can be due to the environment or other priority directives. To suppress the path from the alerted findings, add the full path to the `ignore-paths-trufflehog` file, and leave a comment if neccessary. 
-
+You can also use paths with a wildcard `*`, such as `some_directory/some_nested_directory/*. This works by stripping the wildcard and comparing to the startswith() of the filepath. 
 #### `create_github_issue`
 
 boolean if user wishes to create github issues
@@ -75,12 +75,29 @@ First you must call the trufflehog action or get trufflehog directly and use it 
           github_server: ${{ github.server_url }}
 ```
 
-## Manually running the python script on your trufflehog report
+
+
+
+
+## Manually testing locally on your repo
+
+The easiest way to test the secret scan is to install trufflehog3 using pip.
+Also clone or fetch the script from https://github.com/netlify/security-netlify-trufflehog3
+Unfortunately, even though you are running locally, you have to set the `GITHUB_REPO` env var to be your repo name, but it will run with any value. 
+Then you can run the python code that uses trufflehog3 to create and parse the report:
+
+```
+#python3 trufflehog_python.py -p suppressions-trufflehog3
+```
+
+By optionally setting the appropriate env vars you can also test creating github issues or slack alerting
 
 ### Alerting to Slack
-This tool can alert to slack. By specifying `-s/--slack=true` as an argument in `.github/workflows/trufflehog-main.yml` python trufflehog execution, it will send an alert to slack for each finding. The default is `false`.
+This tool can alert to slack. By specifying `-s/--slack=true` as an argument in python trufflehog execution, it will send an alert to slack for each finding. The default is `false`.
 
 You must also have envvar `SECRET_SCAN_SLACK_WEBHOOK`
 
 ### Creating Github Issues
-This tool can create issues in github. By specifying `-g/--github=true` as an argument in `.github/workflows/trufflehog-main.yml` python trufflehog execution, it will create a github issue for each finding. The default is `false`.
+This tool can create issues in github. By specifying `-g/--github=true` as an argument in python trufflehog execution, it will create a github issue for each finding. The default is `false`.
+
+ou must also have envvar `SECRET_SCAN_GH_ACCESS_TOKEN`

@@ -18,7 +18,7 @@ from github import Github
 git_lfs_problem_repos = [ 'repo-name'
                         ]
 
-def new_scan(repo_url, report_path):
+def new_scan(report_path):
 #    process = subprocess.Popen(['/usr/local/bin/trufflehog3',
     process = subprocess.Popen(['trufflehog3',
                                 '--output', report_path,
@@ -59,22 +59,23 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
             message += "--Commit Hash: " + json.dumps(issue['commitHash']) + "\n"
             message += "--Commit: " + json.dumps(issue['commit']) + "\n"
             message += "--Reason: " + json.dumps(issue['reason']) + "\n"
-            #hack - Some long strings, like javascript, just clog up the console and alerting   
+            #Suppress notifications of these paths explicitly
+            #also hack - Some long strings, like javascript, just clog up the console and alerting   
             for found_string in issue['stringsFound']:
                 if os.path.exists(ignore_paths):
                     file = open(ignore_paths, 'r')
                     file_lines = file.readlines()
-                    #count = 0
+                    ignore_path_matched = "false"
                     for line in file_lines:
-                        #print("Line{}: {}".format(count, line.strip().split(' ', 1)[0]))
-                        if json.dumps(issue['path']) == line.strip().split(' ', 1)[0]:
-                            print("--String Discovered: Redacted - too long")
-                            message += "--String Discovered: Redacted - too long\n"
-                        else:
-                            print("--String Discovered: " + json.dumps(found_string))
-                            message += "--String Discovered: " + json.dumps(found_string) + "\n"
+                        if ignore_path_matched == "false":
+                            path_without_wildcard=line.strip().split(' ', 1)[0].strip().split('*', 1)[0]
+                            if json.dumps(issue['path']) == line.strip().split(' ', 1)[0] or json.dumps(issue['path']).strip('"').startswith(path_without_wildcard):
+                                message += "--String Discovered: (ignored_paths) " + json.dumps(found_string) + "\n"
+                                ignore_path_matched = "true"
+                    if ignore_path_matched == "false":
+                        message += "--String Discovered: " + json.dumps(found_string) + "\n"
+                        
                 else:
-                    print("--String Discovered: " + json.dumps(found_string) + "\n")
                     message += "--String Discovered: " + json.dumps(found_string) + "\n"
                 digest = hashlib.sha256()
                 digest.update(str.encode(repo_name) + str.encode(json.dumps(issue['path'])) + str.encode(json.dumps(found_string)))
@@ -89,23 +90,11 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
                     file = open(suppressions_path, 'r')
                     file_lines = file.readlines()              
                     for line in file_lines:
-                        #print("Line{}: {}".format(count, line.strip().split(' ', 1)[0]))
                         if json.dumps(issue['commitHash']).strip('\"') == line.strip().split(' ', 1)[0] or digest.hexdigest() == line.strip().split(' ', 1)[0]:
                             suppressions_matched = "true"
                 
-                #Suppress notifications of these paths explicitly
-                path_matched = "false"
-                if os.path.exists(ignore_paths):
-                    file = open(ignore_paths, 'r')
-                    file_lines = file.readlines()
-                    for line in file_lines:
-                        #print("Line from file: {}".format(line.strip().split(' ', 1)[0]))
-                        #print("Line from report: ", json.dumps(issue['path']).strip('"'))
-                        if json.dumps(issue['path']).strip('"') == line.strip().split(' ', 1)[0]:
-                            path_matched = "true"
-
                 #If not suppressed, send to slack and/or github
-                if suppressions_matched == "false" and path_matched == "false":
+                if suppressions_matched == "false" and ignore_path_matched == "false":
                     #print("Message: " + message)
                     #print("\n")
                     if slack_alert == "true":
@@ -140,16 +129,6 @@ def get_repo_from_env() -> str:
                'eg. netlify/repo_to_scan' 
         )
     return repo_path
-
-def get_server_from_env() -> str:
-    github_server = os.environ.get('GITHUB_SERVER', None)
-    print("GITHUB SERVER : " + github_server)
-    if github_server is None:
-        raise ValueError(
-               'Must provide server.',
-               'eg. https://github.com' 
-        )
-    return github_server
 
 def matches_issue_in_repo(repo_path, g, issue_title):
     issues = get_issues_from_repo(repo_path, g)
@@ -200,12 +179,9 @@ def main():
     slack_alert = "false"
     github_issue = "false"
     repo_name = get_repo_from_env()
-    github_server = get_server_from_env()
-    repo_url = github_server + "/" + repo_name
-    print("REPO_URL: ", repo_url) 
 
     parser = argparse.ArgumentParser(description="Trufflehog Secret Scanner")
-    parser.add_argument('-r',"--report-path",required=True,default="trufflehog_report.json",help="Location of Required Filepath of Trufflehog Report File to be Parsed")
+    parser.add_argument('-r',"--report-path",required=False,default="trufflehog_report.json",help="Location of Required Filepath of Trufflehog Report File to be Parsed")
     parser.add_argument('-p',"--suppressions-path",required=False,default="suppressions-trufflehog",help="Location of Optional Suppressions List File")
     parser.add_argument('-i',"--ignore-paths",required=False,default="ignore-paths-trufflehog",help="Location of Optional Paths-to-Ignore List File")
     parser.add_argument('-g',"--github",required=False,default=False,help="Create a Github Issue for Each Secret Found")
@@ -225,7 +201,7 @@ def main():
     if slack_alert == "true":
         send_slack_alert(slack_webhook, message)
     
-    new_scan(repo_url, args.report_path)
+    new_scan(args.report_path)
     parse_report_for_issues(repo_name, args.report_path, args.suppressions_path, args.ignore_paths, slack_webhook, slack_alert, github_issue)
 
     message = "Trufflehog3 Scan and Report Parse Complete\n"
