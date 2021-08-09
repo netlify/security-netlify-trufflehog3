@@ -18,7 +18,7 @@ from github import Github
 git_lfs_problem_repos = [ 'repo-name'
                         ]
 
-def new_scan(report_path):
+def new_scan(branch_ref, report_path):
 #    process = subprocess.Popen(['/usr/local/bin/trufflehog3',
     process = subprocess.Popen(['trufflehog3',
                                 '--output', report_path,
@@ -26,6 +26,7 @@ def new_scan(report_path):
                                 '--no-entropy',
                                 '--depth=1000',
                                 '--no-current',
+                                '--branch', branch_ref,
                                 '.'
                                 ], 
                            stdout=subprocess.PIPE,
@@ -131,6 +132,15 @@ def get_repo_from_env() -> str:
         )
     return repo_path
 
+def get_branch_ref_from_env() -> str:
+    branch_ref = os.environ.get('GITHUB_BRANCH_REF', None)
+    if branch_ref is None:
+        raise ValueError(
+               'Must provide branch.',
+               'eg. refs/heads/branch_name' 
+        )
+    return branch_ref
+
 def matches_issue_in_repo(repo_path, g, issue_title):
     issues = get_issues_from_repo(repo_path, g)
     for issue in issues:
@@ -180,6 +190,7 @@ def main():
     slack_alert = "false"
     github_issue = "false"
     repo_name = get_repo_from_env()
+    branch_ref = get_branch_ref_from_env()
 
     parser = argparse.ArgumentParser(description="Trufflehog Secret Scanner")
     parser.add_argument('-r',"--report-path",required=False,default="trufflehog_report.json",help="Location of Required Filepath of Trufflehog Report File to be Parsed")
@@ -202,7 +213,7 @@ def main():
     if slack_alert == "true":
         send_slack_alert(slack_webhook, message)
     
-    new_scan(args.report_path)
+    new_scan(branch_ref, args.report_path)
     parse_report_for_issues(repo_name, args.report_path, args.suppressions_path, args.ignore_paths, slack_webhook, slack_alert, github_issue)
 
     message = "Trufflehog3 Scan and Report Parse Complete\n"
