@@ -74,7 +74,7 @@ First you must call the trufflehog action or get trufflehog directly and use it 
 
 ```
       - name: Trufflehog3 Secret Scan and Report Parser
-        uses: netlify/security-netlify-trufflehog3@v0.6.1
+        uses: netlify/security-netlify-trufflehog3@v0.6.2
         with:
           trufflehog_report_file_path: 'trufflehog_report.json'
           suppression_file_path: '.github/workflows/trufflehog3-files/suppressions-trufflehog3'
@@ -85,7 +85,7 @@ First you must call the trufflehog action or get trufflehog directly and use it 
           secret_scan_gh_access_token: ${{ secrets.GITHUB_TOKEN }}
           github_repo_name: ${{ github.repository}}
           github_server: ${{ github.server_url }}
-          github_server: ${{ github.ref }}
+          github_ref: ${{ github.ref }}
 ```
 
 ## Manually testing locally on your repo
