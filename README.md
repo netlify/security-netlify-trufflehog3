@@ -66,7 +66,7 @@ First you must call the trufflehog action or get trufflehog directly and use it 
 
 ```
       - name: Trufflehog3 Secret Scan and Report Parser
-        uses: netlify/security-netlify-trufflehog3@v0.5.1
+        uses: netlify/security-netlify-trufflehog3@v0.6.0
         with:
           trufflehog_report_file_path: 'trufflehog_report.json'
           suppression_file_path: '.github/workflows/trufflehog3-files/suppressions-trufflehog3'

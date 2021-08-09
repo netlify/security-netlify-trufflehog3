@@ -24,8 +24,7 @@ def new_scan(report_path):
                                 '--output', report_path,
                                 '--format', 'json',
                                 '--no-entropy',
-                                '--max-depth=1000',
-                                '--line-numbers',
+                                '--depth=1000',
                                 '--no-current',
                                 '.'
                                 ], 
@@ -56,51 +55,53 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
             message += "--Date: " + json.dumps(issue['date']) + "\n"
             message += "--Path: " + json.dumps(issue['path']) + "\n"
             message += "--Branch: " + json.dumps(issue['branch']) + "\n"
-            message += "--Commit Hash: " + json.dumps(issue['commitHash']) + "\n"
             message += "--Commit: " + json.dumps(issue['commit']) + "\n"
-            message += "--Reason: " + json.dumps(issue['reason']) + "\n"
+            message += "--Commit Message: " + json.dumps(issue['message']) + "\n"
+            message += "--Line Number: " + json.dumps(issue['line']) + "\n"
+            message += "--Severity: " + json.dumps(issue['rule']['severity']) + "\n"
+            message += "--Reason: " + json.dumps(issue['rule']['message']) + " - " + json.dumps(issue['rule']['id']) + "\n"
             #Suppress notifications of these paths explicitly
             #also hack - Some long strings, like javascript, just clog up the console and alerting   
-            for found_string in issue['stringsFound']:
-                if os.path.exists(ignore_paths):
-                    file = open(ignore_paths, 'r')
-                    file_lines = file.readlines()
-                    ignore_path_matched = "false"
-                    for line in file_lines:
-                        if ignore_path_matched == "false":
-                            path_without_wildcard=line.strip().split(' ', 1)[0].strip().split('*', 1)[0]
-                            if json.dumps(issue['path']) == line.strip().split(' ', 1)[0] or json.dumps(issue['path']).strip('"').startswith(path_without_wildcard):
-                                message += "--String Discovered: (ignored_paths) " + json.dumps(found_string) + "\n"
-                                ignore_path_matched = "true"
+            ignore_path_matched = "false"
+            #for found_string in issue['secret']:
+            if os.path.exists(ignore_paths):
+                file = open(ignore_paths, 'r')
+                file_lines = file.readlines()
+                for line in file_lines:
                     if ignore_path_matched == "false":
-                        message += "--String Discovered: " + json.dumps(found_string) + "\n"
-                        
-                else:
-                    message += "--String Discovered: " + json.dumps(found_string) + "\n"
-                digest = hashlib.sha256()
-                digest.update(str.encode(repo_name) + str.encode(json.dumps(issue['path'])) + str.encode(json.dumps(found_string)))
-                issue_title = "secret discovered - " + json.dumps(issue['path'] + " - " + digest.hexdigest() )
-                message += "--SHA256: " + digest.hexdigest() + "\n"
-                print(message)
-                print("\n")
+                        path_without_wildcard=line.strip().split(' ', 1)[0].strip().split('*', 1)[0]
+                        if json.dumps(issue['path']) == line.strip().split(' ', 1)[0] or json.dumps(issue['path']).strip('"').startswith(path_without_wildcard):
+                            message += "--String Discovered: (ignored_paths) " + json.dumps(issue['secret']) + "\n"
+                            ignore_path_matched = "true"
+                if ignore_path_matched == "false":
+                    message += "--String Discovered: " + json.dumps(issue['secret']) + "\n"
+                    
+            else:
+                message += "--String Discovered: " + json.dumps(issue['secret']) + "\n"
+            digest = hashlib.sha256()
+            digest.update(str.encode(repo_name) + str.encode(json.dumps(issue['path'])) + str.encode(json.dumps(issue['secret'])))
+            issue_title = "secret discovered - " + json.dumps(issue['path'] + " - " + digest.hexdigest() )
+            message += "--SHA256: " + digest.hexdigest() + "\n"
+            print(message)
+            print("\n")
 
-                # Checking if commitHash or sha256 digest is in suppressions file
-                suppressions_matched = "false"
-                if os.path.exists(suppressions_path):
-                    file = open(suppressions_path, 'r')
-                    file_lines = file.readlines()              
-                    for line in file_lines:
-                        if json.dumps(issue['commitHash']).strip('\"') == line.strip().split(' ', 1)[0] or digest.hexdigest() == line.strip().split(' ', 1)[0]:
-                            suppressions_matched = "true"
-                
-                #If not suppressed, send to slack and/or github
-                if suppressions_matched == "false" and ignore_path_matched == "false":
-                    #print("Message: " + message)
-                    #print("\n")
-                    if slack_alert == "true":
-                        send_slack_alert(slack_webhook, message)
-                    if github_issue == "true":
-                        dedup_and_create_gh_issue(message, issue_title)
+            # Checking if commitHash or sha256 digest is in suppressions file
+            suppressions_matched = "false"
+            if os.path.exists(suppressions_path):
+                file = open(suppressions_path, 'r')
+                file_lines = file.readlines()              
+                for line in file_lines:
+                    if json.dumps(issue['commit']).strip('\"') == line.strip().split(' ', 1)[0] or digest.hexdigest() == line.strip().split(' ', 1)[0]:
+                        suppressions_matched = "true"
+            
+            #If not suppressed, send to slack and/or github
+            if suppressions_matched == "false" and ignore_path_matched == "false":
+                #print("Message: " + message)
+                #print("\n")
+                if slack_alert == "true":
+                    send_slack_alert(slack_webhook, message)
+                if github_issue == "true":
+                    dedup_and_create_gh_issue(message, issue_title)
                     
     #except:
         #print(" [ERROR] Cannot open file: " + filename)
