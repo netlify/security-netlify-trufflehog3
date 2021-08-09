@@ -60,6 +60,14 @@ github_repo_name: ${{ github.repository }}
 
 github_server: ${{ github.server_url }} 
 
+#### `github_ref`
+
+Name of the current branch ref, like refs/heads/branch_name
+
+github_ref: ${{ github.ref }}
+
+
+
 
 ## Example Usage 
 First you must call the trufflehog action or get trufflehog directly and use it to produce a json report:
