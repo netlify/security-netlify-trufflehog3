@@ -37,7 +37,7 @@ inputs:
     description: 'github server'
     required: false
     default: ''
-  github_branch_ref:
+  github_ref:
     description: 'github branch ref'
     required: false
     default: 'refs/heads/main'
