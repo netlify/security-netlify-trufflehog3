@@ -72,7 +72,7 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
                     if ignore_path_matched == "false":
                         path_without_wildcard=line.strip().split(' ', 1)[0].strip().split('*', 1)[0]
                         if json.dumps(issue['path']) == line.strip().split(' ', 1)[0] or json.dumps(issue['path']).strip('"').startswith(path_without_wildcard):
-                            message += "--String Discovered: (ignored_paths) " + json.dumps(issue['secret']) + "\n"
+                            message += "--String Discovered: (redacted due to being in ignored paths file)\n"
                             ignore_path_matched = "true"
                 if ignore_path_matched == "false":
                     message += "--String Discovered: " + json.dumps(issue['secret']) + "\n"
