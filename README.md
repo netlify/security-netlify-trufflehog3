@@ -70,11 +70,25 @@ github_ref: ${{ github.ref }}
 
 
 ## Example Usage 
-First you must call the trufflehog action or get trufflehog directly and use it to produce a json report:
+First, you must call the `actions/checkout` action with a fetch-depth: 0, otherwise it makes everything a single commit :(
+Second, you must call the `netlify/security-netlify-trufflehog3 action`:
 
 ```
-      - name: Trufflehog3 Secret Scan and Report Parser
-        uses: netlify/security-netlify-trufflehog3@v0.6.3
+jobs:
+  # This workflow contains a single job called "scan"
+  scan:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Trufflehog3 Scan and Parse Report
+        uses: netlify/security-netlify-trufflehog3@v0.6.4
         with:
           trufflehog_report_file_path: 'trufflehog_report.json'
           suppression_file_path: '.github/workflows/trufflehog3-files/suppressions-trufflehog3'

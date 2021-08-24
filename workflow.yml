@@ -13,7 +13,7 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-jobs:
+  jobs:
   # This workflow contains a single job called "scan"
   scan:
     # The type of runner that the job will run on
@@ -23,9 +23,11 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-      - name: Trufflehog3 Secret Scan and Report Parser
-        uses: netlify/security-netlify-trufflehog3@v0.6.3
+      - name: Trufflehog3 Scan and Parse Report
+        uses: netlify/security-netlify-trufflehog3@v0.6.4
         with:
           trufflehog_report_file_path: 'trufflehog_report.json'
           suppression_file_path: '.github/workflows/trufflehog3-files/suppressions-trufflehog3'

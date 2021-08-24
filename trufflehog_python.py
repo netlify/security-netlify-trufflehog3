@@ -27,7 +27,7 @@ def new_scan(branch_ref, report_path):
                                 '--no-entropy',
                                 '--depth=1000',
                                 '--no-current',
-                                #'--branch', branch_ref,
+                                '--branch', branch_ref,
                                 '.'
                                 ], 
                            stdout=subprocess.PIPE,
