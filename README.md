@@ -93,6 +93,7 @@ First you must call the trufflehog action or get trufflehog directly and use it 
 - The easiest way to test the secret scan is to install trufflehog3 using pip.
 - Also clone or fetch the script from https://github.com/netlify/security-netlify-trufflehog3
 - Unfortunately, even though you are running locally, you have to set the `GITHUB_REPO` env var to be your repo name, but it will run with any value. 
+- You will also need to specify the branch name as `GITHUB_BRANCH_REF` env var, such as `refs/heads/main`
 - Then you can run the python code that uses trufflehog3 to create and parse the report:
 
 ```
@@ -110,3 +111,6 @@ You must also have envvar `SECRET_SCAN_SLACK_WEBHOOK`
 This tool can create issues in github. By specifying `-g/--github=true` as an argument in python trufflehog execution, it will create a github issue for each finding. The default is `false`.
 
 You must also have envvar `SECRET_SCAN_GH_ACCESS_TOKEN`
+
+### Debug Mode
+This tool will automatically redact any suppressed or ignored_paths secrets from being alerted to the console. By specifying `-d/--debug True`, it will not redact, and instead show the full summary of all secrets discovered.

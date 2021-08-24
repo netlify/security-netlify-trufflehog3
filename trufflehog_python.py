@@ -6,6 +6,7 @@ import argparse
 import codecs
 import subprocess
 import os
+import sys
 import hashlib
 import time
 import glob
@@ -44,14 +45,15 @@ def new_scan(branch_ref, report_path):
                 print(output.strip())
             break
 
-def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_paths, slack_webhook, slack_alert, github_issue):
+def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_paths, slack_webhook, slack_alert, github_issue, debug_mode) -> bool:
     filename = report_path 
     with open(filename, 'r+') as json_file:
         json_data = json.load(json_file)
+        return_error = "false"
         for issue in json_data:
             #print("Entire Issue: {}\n".format(issue))         
-            message = "New Finding Alert\n"
-            message += "\n To Forever Suppress This Finding From Alerting add the SHA256 to suppressions-trufflehog3 file, to suppress all findings for this commit, add the commit hash instead. See https://github.com/netlify/security-netlify-trufflehog3#suppression_file_path \n"
+            message = "New Secret Discovered\n"
+            message += "To Forever Suppress This Finding From Alerting add the SHA256 to suppressions-trufflehog3 file, to suppress all findings for this commit, add the commit hash instead. See https://github.com/netlify/security-netlify-trufflehog3#suppression_file_path\n\n"
             message += "--Repo: " + repo_name + "\n"
             message += "--Date: " + json.dumps(issue['date']) + "\n"
             message += "--Path: " + json.dumps(issue['path']) + "\n"
@@ -61,6 +63,11 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
             message += "--Line Number: " + json.dumps(issue['line']) + "\n"
             message += "--Severity: " + json.dumps(issue['rule']['severity']) + "\n"
             message += "--Reason: " + json.dumps(issue['rule']['message']) + " - " + json.dumps(issue['rule']['id']) + "\n"
+            digest = hashlib.sha256()
+            digest.update(str.encode(repo_name) + str.encode(json.dumps(issue['path'])) + str.encode(json.dumps(issue['secret'])))
+            issue_title = "secret discovered - " + json.dumps(issue['path'] + " - " + digest.hexdigest() )
+            message += "--SHA256: " + digest.hexdigest() + "\n"
+            
             #Suppress notifications of these paths explicitly
             #also hack - Some long strings, like javascript, just clog up the console and alerting   
             ignore_path_matched = "false"
@@ -72,19 +79,16 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
                     if ignore_path_matched == "false":
                         path_without_wildcard=line.strip().split(' ', 1)[0].strip().split('*', 1)[0]
                         if json.dumps(issue['path']) == line.strip().split(' ', 1)[0] or json.dumps(issue['path']).strip('"').startswith(path_without_wildcard):
-                            message += "--String Discovered: (redacted due to being in ignored paths file)\n"
                             ignore_path_matched = "true"
+                            if debug_mode == "True":
+                                message += "--String Discovered but redacted due to being in ignored paths file,  Path = " + line 
+                                message += "--DEBUG String Discovered: " + json.dumps(issue['secret']) + "\n"
+                            else:    
+                                message = "--String Discovered but redacted due to being in ignored paths file,  Path = " + line
                 if ignore_path_matched == "false":
-                    message += "--String Discovered: " + json.dumps(issue['secret']) + "\n"
-                    
+                    message += "--String Discovered: " + json.dumps(issue['secret']) + "\n"      
             else:
                 message += "--String Discovered: " + json.dumps(issue['secret']) + "\n"
-            digest = hashlib.sha256()
-            digest.update(str.encode(repo_name) + str.encode(json.dumps(issue['path'])) + str.encode(json.dumps(issue['secret'])))
-            issue_title = "secret discovered - " + json.dumps(issue['path'] + " - " + digest.hexdigest() )
-            message += "--SHA256: " + digest.hexdigest() + "\n"
-            print(message)
-            print("\n")
 
             # Checking if commitHash or sha256 digest is in suppressions file
             suppressions_matched = "false"
@@ -94,16 +98,25 @@ def parse_report_for_issues(repo_name, report_path, suppressions_path, ignore_pa
                 for line in file_lines:
                     if json.dumps(issue['commit']).strip('\"') == line.strip().split(' ', 1)[0] or digest.hexdigest() == line.strip().split(' ', 1)[0]:
                         suppressions_matched = "true"
-            
+                        if debug_mode == "True":
+                            message += "--String Discovered but redacted due to being in suppressions file,  Commit or SHA = " + line
+                            message += "--DEBUG: String Discovered: " + json.dumps(issue['secret']) + "\n"
+                        else:
+                            message = "--String Discovered but redacted due to being in suppressions file,  Commit or SHA = " + line
+            print(message)
+
             #If not suppressed, send to slack and/or github
             if suppressions_matched == "false" and ignore_path_matched == "false":
                 #print("Message: " + message)
                 #print("\n")
+                return_error = "true"
                 if slack_alert == "true":
                     send_slack_alert(slack_webhook, message)
                 if github_issue == "true":
                     dedup_and_create_gh_issue(message, issue_title)
-                    
+
+        if return_error == "true":
+            return return_error       
     #except:
         #print(" [ERROR] Cannot open file: " + filename)
 
@@ -186,6 +199,7 @@ def send_slack_alert(slack_webhook, message):
         data), headers={'Content-Type': 'application/json'})
 
 def main():
+    return_error = "false"
     slack_webhook = "Null"
     slack_alert = "false"
     github_issue = "false"
@@ -198,6 +212,7 @@ def main():
     parser.add_argument('-i',"--ignore-paths",required=False,default="ignore-paths-trufflehog",help="Location of Optional Paths-to-Ignore List File")
     parser.add_argument('-g',"--github",required=False,default=False,help="Create a Github Issue for Each Secret Found")
     parser.add_argument('-s',"--slack",required=False,default=False,help="Send a Slack Alert for Each Secret Found")
+    parser.add_argument('-d',"--debug",required=False,default=False,help="Debug Mode")
     args = parser.parse_args()
 
     if args.slack == "True" or args.slack == "true" or args.slack == "T" or args.slack == "t":
@@ -214,9 +229,10 @@ def main():
         send_slack_alert(slack_webhook, message)
     
     new_scan(branch_ref, args.report_path)
-    parse_report_for_issues(repo_name, args.report_path, args.suppressions_path, args.ignore_paths, slack_webhook, slack_alert, github_issue)
-
-    message = "Trufflehog3 Scan and Report Parse Complete\n"
+    return_error = parse_report_for_issues(repo_name, args.report_path, args.suppressions_path, args.ignore_paths, slack_webhook, slack_alert, github_issue, args.debug)
+    if return_error == "true":
+        sys.exit("Alert: New Secrets Discovered - Please remediate any secrets to continue...Exiting!")
+    message = "Trufflehog3 Scan and Report Parse Completed Successfully\n"
     print(message)
     if slack_alert == "true":
         send_slack_alert(slack_webhook, message)
