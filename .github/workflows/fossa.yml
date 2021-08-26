@@ -31,6 +31,6 @@ jobs:
           sed -i "${line_number}s|.*|  project: git@github.com:${GITHUB_REPOSITORY}.git|" .fossa.yml
           cat .fossa.yml
       - name: Upload dependencies
-        run: fossa analyze --debug
+        run: fossa test
         env:
           FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
